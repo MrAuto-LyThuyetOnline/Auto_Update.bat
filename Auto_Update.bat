@@ -14,13 +14,17 @@ if exist "unzip.vbs" del /f /q "unzip.vbs"
 echo Dang tai xuong... Vui long khong tat cua so nay.
 
 :: Kiem tra xem co curl tren may khong
+:: Tao timestamp de bypass Cloudflare CDN cache (tranh tai file cu bi cache 30 ngay)
+for /f "tokens=2 delims==" %%a in ('wmic os get localdatetime /value') do set DT=%%a
+set CACHE_BUST=%DT:~0,14%
+
 where curl >nul 2>&1
 if not errorlevel 1 (
     echo [INFO] Phat hien Windows 10 hoac 11 - Su dung trinh tai toc do cao...
-    curl -L -k -X GET "https://hoanghuy68.site/updates/update.zip" -o "update.zip"
+    curl -L -k -X GET "https://hoanghuy68.site/updates_new/update.zip?t=%CACHE_BUST%" -H "Cache-Control: no-cache, no-store, must-revalidate" -H "Pragma: no-cache" -H "Expires: 0" -o "update.zip"
 ) else (
     echo [INFO] Phat hien Windows doi cu - Su dung che do tai tuong thich...
-    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://hoanghuy68.site/updates/update.zip' -OutFile 'update.zip'"
+    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://hoanghuy68.site/updates_new/update.zip?t=%CACHE_BUST%' -Headers @{'Cache-Control'='no-cache, no-store, must-revalidate'; 'Pragma'='no-cache'; 'Expires'='0'} -OutFile 'update.zip'"
 )
 
 :: Kiem tra tai thanh cong khong
